@@ -1,4 +1,4 @@
-param(
+﻿param(
     [switch]$EnableLogging,
     [switch]$nonInteractive,
     [ValidateSet('DisableRegKeys',          
@@ -20,7 +20,8 @@ param(
     [ValidateSet('photoviewer', 'mspaint', 'snippingtool', 'notepad', 'photoslegacy')]
     [array]$InstallClassicApps,
     [switch]$RunWinUpdateRepair,
-    [switch]$ExcludeOptions
+    [switch]$ExcludeOptions,
+    [switch]$loadFunctionsOnly
 )
 
 if ($nonInteractive) {
@@ -33,7 +34,7 @@ if ($nonInteractive) {
 
 #get powershell version to ensure run-trusted doesnt enter an infinite loop
 $version = $PSVersionTable.PSVersion
-if ($version -like '7*') {
+if ($version -like '7*' -and -not $loadFunctionsOnly) {
     $Global:psversion = 7
 }
 else {
@@ -60,7 +61,7 @@ if ($psversion -ge 7) {
 }
 
 #check if powershell is being "locked down" aka in ConstrainedLangauge mode
-if ($ExecutionContext.SessionState.LanguageMode -ne 'FullLanguage') {
+if ($ExecutionContext.SessionState.LanguageMode -ne 'FullLanguage' -and -not $loadFunctionsOnly) {
     Write-Host 'ERROR: PowerShell is running in ' -NoNewline -ForegroundColor Red
     Write-Host "[$($ExecutionContext.SessionState.LanguageMode) Mode]!" -ForegroundColor Yellow
     Write-Host 'In order for this script to run PowerShell needs to be in FullLanguage Mode!' -ForegroundColor Red
@@ -70,7 +71,7 @@ if ($ExecutionContext.SessionState.LanguageMode -ne 'FullLanguage') {
     exit 1
 }
 
-if (!([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]'Administrator')) {
+if (-not $loadFunctionsOnly -and !([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]'Administrator')) {
     #rebuild params from $MyInvocation.BoundParameters
     $paramStr = $MyInvocation.BoundParameters.GetEnumerator() | ForEach-Object {
         $val = $_.Value
@@ -83,7 +84,7 @@ if (!([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]:
         
     }
 
-    $arglist = "-NoProfile -ExecutionPolicy Bypass -C `"& ([scriptblock]::Create((irm 'https://raw.githubusercontent.com/zoicware/RemoveWindowsAI/main/RemoveWindowsAi.ps1'))) $($paramStr -join ' ')`""
+    $arglist = "-NoProfile -ExecutionPolicy Bypass -C `"& ([scriptblock]::Create((irm 'https://raw.githubusercontent.com/Zombie-Kaiser/RemoveWindowsAI/main/RemoveWindowsAi.ps1'))) $($paramStr -join ' ')`""
     Start-Process PowerShell.exe -ArgumentList $arglist -Verb RunAs
     exit	
 }
@@ -128,7 +129,7 @@ elseif ($avproducts.displayName -ne 'Windows Defender') {
     }
 }
 
-if ($thirdPartyAv -and ($thirdPartyAv.State -eq 'ON' -or $thirdPartyAv.State -eq 'SNOOZED')) {
+if (-not $loadFunctionsOnly -and $thirdPartyAv -and ($thirdPartyAv.State -eq 'ON' -or $thirdPartyAv.State -eq 'SNOOZED')) {
     Write-Host 'WARNING: A third-party anti-virus has been detected!' -ForegroundColor Yellow
     Write-Host "The anti-virus: $($thirdPartyAv.Name), may falsely block/break this script!" -ForegroundColor Yellow
     Write-Host 'Please disable or uninstall this anti-virus temporarily or proceed with caution!' -ForegroundColor Yellow
@@ -330,13 +331,15 @@ function Check-PendingUpdates {
     }
 }
 
-$pendingUpdates = Check-PendingUpdates
-if ($pendingUpdates) {
-    Write-Status -msg 'Windows Update is currently installing or pending for reboot!' -errorOutput
-    Write-Status -msg 'Finish Windows Update first and/or reboot then re-run this script...' -errorOutput
-    Write-Host "`nPress Any Key to Exit..."
-    [System.Console]::ReadKey() >$null
-    exit
+if (-not $loadFunctionsOnly) {
+    $pendingUpdates = Check-PendingUpdates
+    if ($pendingUpdates) {
+        Write-Status -msg 'Windows Update is currently installing or pending for reboot!' -errorOutput
+        Write-Status -msg 'Finish Windows Update first and/or reboot then re-run this script...' -errorOutput
+        Write-Host "`nPress Any Key to Exit..."
+        [System.Console]::ReadKey() >$null
+        exit
+    }
 }
 
 #some users have messed with the system envrioment variables (for some reason) this breaks inline cmdlets like Reg.exe 
@@ -349,7 +352,7 @@ if ($env:PATH -notlike "*$env:SystemRoot\system32;*") {
 
 #setup script
 #=====================================================================================
-Write-Host '~ ~ ~ Remove Windows AI by @zoicware ~ ~ ~' -ForegroundColor DarkCyan
+Write-Host '~ ~ ~ Remove Windows AI (fork by @Zombie-Kaiser, original by @zoicware) ~ ~ ~' -ForegroundColor DarkCyan
 
 #disables quick edit just for this session 
 #since the quick edit setting is stored in the powershell shortcut file when ran from startmenu its not really possible to do it any other way
@@ -940,8 +943,6 @@ function Disable-Registry-Keys {
     Reg.exe add 'HKCU\Software\Microsoft\Windows\Shell\ClickToDo' /v 'DisableClickToDo' /t REG_DWORD /d @('1', '0')[$revert] /f *>$null
     Reg.exe add 'HKCU\Software\Microsoft\Windows\CurrentVersion\M365Copilot' /v 'AutoStartDelayEnabled' /t REG_DWORD /d @('0', '1')[$revert] /f *>$null
     Reg.exe add 'HKCU\Software\Microsoft\Windows\CurrentVersion\M365Copilot' /v 'IsCompanionWindowAvailable' /t REG_DWORD /d @('0', '1')[$revert] /f *>$null
-    Reg.exe add 'HKU\S-1-5-18\Software\Microsoft\Copilot' /v 'InstallerPinned' /t REG_DWORD /d @('0', '1')[$revert] /f *>$null
-    Reg.exe add 'HKU\.DEFAULT\Software\Microsoft\Copilot' /v 'InstallerPinned' /t REG_DWORD /d @('0', '1')[$revert] /f *>$null
     #remove copilot from search
     Write-Status -msg "$(@('Disabling', 'Enabling')[$revert]) Copilot In Windows Search..."
     Reg.exe add 'HKCU\SOFTWARE\Policies\Microsoft\Windows\Explorer' /v 'DisableSearchBoxSuggestions' /t REG_DWORD /d @('1', '0')[$revert] /f *>$null
@@ -2019,10 +2020,10 @@ function Install-NOAIPackage {
                 Write-Status -msg 'Downloading RemoveWindowsAI Package From Github...'
                 $ProgressPreference = 'SilentlyContinue'
                 try {
-                    Invoke-WebRequest -Uri "https://github.com/zoicware/RemoveWindowsAI/raw/refs/heads/main/RemoveWindowsAIPackage/$arch/ZoicwareRemoveWindowsAI-$($arch)1.0.0.1.cab" -OutFile "$($tempDir)ZoicwareRemoveWindowsAI-$($arch)1.0.0.1.cab" -UseBasicParsing -ErrorAction Stop
+                    Invoke-WebRequest -Uri "https://github.com/Zombie-Kaiser/RemoveWindowsAI/raw/refs/heads/main/RemoveWindowsAIPackage/$arch/ZoicwareRemoveWindowsAI-$($arch)1.0.0.1.cab" -OutFile "$($tempDir)ZoicwareRemoveWindowsAI-$($arch)1.0.0.1.cab" -UseBasicParsing -ErrorAction Stop
                 }
                 catch {
-                    Write-Status -msg "Unable to Download Package at: https://github.com/zoicware/RemoveWindowsAI/raw/refs/heads/main/RemoveWindowsAIPackage/$arch/ZoicwareRemoveWindowsAI-$($arch)1.0.0.1.cab" -errorOutput
+                    Write-Status -msg "Unable to Download Package at: https://github.com/Zombie-Kaiser/RemoveWindowsAI/raw/refs/heads/main/RemoveWindowsAIPackage/$arch/ZoicwareRemoveWindowsAI-$($arch)1.0.0.1.cab" -errorOutput
                     return
                 }
 
@@ -2040,27 +2041,13 @@ function Install-NOAIPackage {
             Write-Status -msg 'Update package already installed...'
         }
         
-        Write-Status -msg 'Checking update package install status...'
-
-        $regPath = 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Component Based Servicing\Packages'
-        Get-ChildItem $regPath | ForEach-Object {
-            $value = try { Get-ItemProperty "registry::$($_.Name)" -ErrorAction Stop } catch { $null }
-            if ($value -and $value.PSPath -like '*zoicware*') {
-                $currentState = Get-ItemPropertyValue $value.PSPath -Name CurrentState -ErrorAction SilentlyContinue
-                $name = $value.PSChildName
-            }
-        }
-        #if the package state is not installed (112) or install pending (96) then assume that it got installed incorrectly
-        if ($currentState -ne 112 -and $currentState -ne 96) {
-            Write-Status -msg 'Package installed incorrectly... Uninstalling!' -errorOutput
-            #use the package name from registry to prevent an uneccesary get-windowspackage call
-            $package = [PSCustomObject]@{ PackageName = $name }
-            Remove-CabPackage -package $package
-        }
-        else {
-            Write-Status -msg 'Package installed correctly!'
-        }
-
+        #need to improve this check
+        #  Write-Status -msg 'Checking update package install status...'
+        #  $package = Get-WindowsPackage -Online | Where-Object { $_.PackageName -like '*zoicware*' }
+        #  if ($package.PackageState -eq 'InstallPending') {
+        #      Write-Status -msg 'Package installed incorrectly... Uninstalling!' -errorOutput
+        #      Remove-CabPackage -package $package
+        #  }
     }
     else {
         
@@ -3363,7 +3350,7 @@ function Update-Cleanup-Check {
         #grab update cleanup script from github instead of embedding it in here
         try {
             Write-Status -msg 'Attempting to get Update Cleanup script from Github...'
-            $scriptContent = Invoke-WebRequest -Uri 'https://raw.githubusercontent.com/zoicware/RemoveWindowsAI/refs/heads/main/RemoveAI-UpdateCleanup.ps1' -UseBasicParsing -ErrorAction Stop | Select-Object Content
+            $scriptContent = Invoke-WebRequest -Uri 'https://raw.githubusercontent.com/Zombie-Kaiser/RemoveWindowsAI/refs/heads/main/RemoveAI-UpdateCleanup.ps1' -UseBasicParsing -ErrorAction Stop | Select-Object Content
         }
         catch {
             Write-Status -msg 'Unable to get Update Cleanup script from Github!' -errorOutput
@@ -3419,7 +3406,7 @@ function Create-ScriptShortcut {
         $WshShell = New-Object -comObject WScript.Shell
         $Shortcut = $WshShell.CreateShortcut("$desktopPath\RemoveWindowsAI.lnk")
         $Shortcut.TargetPath = $psPath
-        $Shortcut.Arguments = "-ep bypass -c `"& ([scriptblock]::Create((irm 'https://raw.githubusercontent.com/zoicware/RemoveWindowsAI/main/RemoveWindowsAi.ps1')))`""
+        $Shortcut.Arguments = "-ep bypass -c `"& ([scriptblock]::Create((irm 'https://raw.githubusercontent.com/Zombie-Kaiser/RemoveWindowsAI/main/RemoveWindowsAi.ps1')))`""
         $Shortcut.IconLocation = $icoPath
         $Shortcut.Save()
         #runasadmin
@@ -3434,7 +3421,7 @@ function Create-ScriptShortcut {
         $WshShell = New-Object -comObject WScript.Shell
         $Shortcut = $WshShell.CreateShortcut("$startPath\RemoveWindowsAI.lnk")
         $Shortcut.TargetPath = $psPath
-        $Shortcut.Arguments = "-ep bypass -c `"& ([scriptblock]::Create((irm 'https://raw.githubusercontent.com/zoicware/RemoveWindowsAI/main/RemoveWindowsAi.ps1')))`""
+        $Shortcut.Arguments = "-ep bypass -c `"& ([scriptblock]::Create((irm 'https://raw.githubusercontent.com/Zombie-Kaiser/RemoveWindowsAI/main/RemoveWindowsAi.ps1')))`""
         $Shortcut.IconLocation = $icoPath
         $Shortcut.Save()
         #runasadmin
@@ -3818,7 +3805,7 @@ function install-classicapps {
         if (!(Test-Path "$($tempDir)ClassicApps")) {
             $ProgressPreference = 'SilentlyContinue'
             Write-Status -msg 'Downloading Classic Apps Files from Github...'
-            $url = 'https://github.com/zoicware/RemoveWindowsAI/archive/refs/heads/main.zip'
+            $url = 'https://github.com/Zombie-Kaiser/RemoveWindowsAI/archive/refs/heads/main.zip'
             try {
                 Invoke-WebRequest -Uri $url -OutFile "$($tempDir)main.zip" -ErrorAction Stop
             }
@@ -4015,6 +4002,10 @@ function Update-Repair {
  
 }
 
+if ($loadFunctionsOnly) {
+    return
+}
+
 if ($RunWinUpdateRepair) {
     Update-Repair
 }
@@ -4105,7 +4096,7 @@ else {
     }
 
     $window = New-Object System.Windows.Window
-    $window.Title = 'Remove Windows AI - by @zoicware'
+    $window.Title = 'Remove Windows AI - fork by @Zombie-Kaiser (orig. @zoicware)'
     $window.Width = 600
     $window.Height = 700
     $window.WindowStartupLocation = 'CenterScreen'
@@ -4889,7 +4880,7 @@ else {
 '@
     $githubButton.Template = [System.Windows.Markup.XamlReader]::Parse($githubTemplate)
     $githubButton.Add_Click({
-            Start-Process 'https://github.com/zoicware/RemoveWindowsAI'
+            Start-Process 'https://github.com/Zombie-Kaiser/RemoveWindowsAI'
         })
 
     $socialPanel.Children.Add($discordButton) | Out-Null
