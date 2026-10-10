@@ -1,0 +1,17 @@
+# Build artifacts
+build/
+RemoveWindowsAI-GUI.exe
+RemoveWindowsAI-EXE-Bundle/
+RemoveWindowsAI-EXE-Bundle.zip
+
+# Runtime files
+RemoveWindowsAI-GUI.lang
+*.log
+
+# Windows artifacts
+Thumbs.db
+desktop.ini
+$RECYCLE.BIN/
+
+# PowerShell
+*.ps1.bak

@@ -1,4 +1,32 @@
-# Remove Windows Ai
+# Remove Windows Ai (Zombie-Kaiser Fork)
+
+> [!NOTE]
+> **This is a fork** of [zoicware/RemoveWindowsAI](https://github.com/zoicware/RemoveWindowsAI) maintained by **[@Zombie-Kaiser](https://github.com/Zombie-Kaiser)**.
+>
+> This fork adds:
+> - **Bilingual GUI** (`RemoveWindowsAI-GUI.ps1`) — English and 简体中文, switchable live from the language menu
+> - **Single-file EXE build** (`RemoveWindowsAI-GUI.exe`) — built with `Build-SingleFileExe.ps1` via ps2exe, the main script is Base64-embedded so the EXE runs standalone from anywhere
+> - **Offline EXE bundle** (`RemoveWindowsAI-EXE-Bundle/`) — the EXE plus ClassicApps and CBS packages so all features work without internet
+>
+> All original removal features, ClassicApps installers and CBS packages are unchanged. All credit for the original removal work goes to **@zoicware**.
+
+### Download the Standalone EXE
+
+> [!TIP]
+> The pre-built EXE and offline bundle are available on the **[Releases](https://github.com/Zombie-Kaiser/RemoveWindowsAI/releases)** page.
+>
+> - **`RemoveWindowsAI-GUI.exe`** — single-file standalone GUI (no dependencies needed, runs from anywhere)
+> - **`RemoveWindowsAI-EXE-Bundle.zip`** — EXE + ClassicApps + CBS packages for full offline use
+
+### Build the EXE from Source
+
+```PowerShell
+# Requires Windows PowerShell 5.1 and the ps2exe module (auto-installed by the build script)
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File Build-SingleFileExe.ps1
+```
+
+This Base64-embeds `RemoveWindowsAi.ps1` into `RemoveWindowsAI-GUI.ps1`, then compiles via ps2exe to produce `RemoveWindowsAI-GUI.exe`.
+
 ## Why?
 In Windows 11 22H2 Microsoft began adding AI features like Copilot and Recall. Since then, additional AI driven components have been added, many of which have never been publicly documented. This script aims to remove ALL of these features to improve user experience, privacy and security. 
 
@@ -52,10 +80,10 @@ In Windows 11 22H2 Microsoft began adding AI features like Copilot and Recall. S
  
 #### Manual AI Disabling
 - Unfortunately, not all features and settings can be disabled via a script. This guide will show additional AI features to disable.
-> **[Disable Other AI Features](https://github.com/zoicware/RemoveWindowsAI/blob/main/OtherAIFeatures.md)**
+> **[Disable Other AI Features](https://github.com/Zombie-Kaiser/RemoveWindowsAI/blob/main/OtherAIFeatures.md)**
   
 ### Read the Script Docs Here
-  > **[Documentation](https://github.com/zoicware/RemoveWindowsAI/blob/main/Documentation.md)**
+  > **[Documentation](https://github.com/Zombie-Kaiser/RemoveWindowsAI/blob/main/Documentation.md)**
 
   > [!WARNING]
   > Some third party anti-viruses will falsely detect the script as malicious, obviously this is a false positive and the anti-virus will need to be temporarily disabled or set the script as an exclusion.
@@ -76,7 +104,7 @@ In Windows 11 22H2 Microsoft began adding AI features like Copilot and Recall. S
 
  ### Launch with UI
  ```PowerShell
- & ([scriptblock]::Create((irm "https://raw.githubusercontent.com/zoicware/RemoveWindowsAI/main/RemoveWindowsAi.ps1")))
+ & ([scriptblock]::Create((irm "https://raw.githubusercontent.com/Zombie-Kaiser/RemoveWindowsAI/main/RemoveWindowsAi.ps1")))
  ```
  ### Compact Command:
  ##### Link shortened using open source link shortener: https://kutt.to/
@@ -99,19 +127,19 @@ In Windows 11 22H2 Microsoft began adding AI features like Copilot and Recall. S
 
 **Run in Non-Interactive Mode with All Options**
  ```PowerShell
- & ([scriptblock]::Create((irm "https://raw.githubusercontent.com/zoicware/RemoveWindowsAI/main/RemoveWindowsAi.ps1"))) -nonInteractive -AllOptions
+ & ([scriptblock]::Create((irm "https://raw.githubusercontent.com/Zombie-Kaiser/RemoveWindowsAI/main/RemoveWindowsAi.ps1"))) -nonInteractive -AllOptions
  ```
 
 --- 
 
 **Run with Specific Options Example**
  ```PowerShell
- & ([scriptblock]::Create((irm "https://raw.githubusercontent.com/zoicware/RemoveWindowsAI/main/RemoveWindowsAi.ps1"))) -nonInteractive -Options DisableRegKeys,RemoveAppxPackages,DisableCopilotPolicies 
+ & ([scriptblock]::Create((irm "https://raw.githubusercontent.com/Zombie-Kaiser/RemoveWindowsAI/main/RemoveWindowsAi.ps1"))) -nonInteractive -Options DisableRegKeys,RemoveAppxPackages,DisableCopilotPolicies 
  ```
 
  **Run with Specific Options Excluded Example**
  ```PowerShell
- & ([scriptblock]::Create((irm "https://raw.githubusercontent.com/zoicware/RemoveWindowsAI/main/RemoveWindowsAi.ps1"))) -nonInteractive -ExcludeOptions -Options DisableRegKeys,RemoveAppxPackages,DisableCopilotPolicies 
+ & ([scriptblock]::Create((irm "https://raw.githubusercontent.com/Zombie-Kaiser/RemoveWindowsAI/main/RemoveWindowsAi.ps1"))) -nonInteractive -ExcludeOptions -Options DisableRegKeys,RemoveAppxPackages,DisableCopilotPolicies 
  ```
 
 **All Possible Options:**
@@ -131,7 +159,7 @@ UpdateCleanupCheck
 
 **Run Install Classic Apps**
  ```PowerShell
- & ([scriptblock]::Create((irm "https://raw.githubusercontent.com/zoicware/RemoveWindowsAI/main/RemoveWindowsAi.ps1"))) -nonInteractive -InstallClassicApps photoviewer,mspaint,snippingtool,notepad  
+ & ([scriptblock]::Create((irm "https://raw.githubusercontent.com/Zombie-Kaiser/RemoveWindowsAI/main/RemoveWindowsAi.ps1"))) -nonInteractive -InstallClassicApps photoviewer,mspaint,snippingtool,notepad  
  ```
 
 **All Possible Options:**
@@ -151,7 +179,7 @@ photoslegacy
 > 
 > **This creates a restore point for you**
  ```PowerShell
- & ([scriptblock]::Create((irm "https://raw.githubusercontent.com/zoicware/RemoveWindowsAI/main/RemoveWindowsAi.ps1"))) -nonInteractive -backupMode -AllOptions
+ & ([scriptblock]::Create((irm "https://raw.githubusercontent.com/Zombie-Kaiser/RemoveWindowsAI/main/RemoveWindowsAi.ps1"))) -nonInteractive -backupMode -AllOptions
  ```
 
 ---
@@ -159,7 +187,7 @@ photoslegacy
 **Revert Changes**
 
  ```PowerShell
- & ([scriptblock]::Create((irm "https://raw.githubusercontent.com/zoicware/RemoveWindowsAI/main/RemoveWindowsAi.ps1"))) -nonInteractive -revertMode -AllOptions
+ & ([scriptblock]::Create((irm "https://raw.githubusercontent.com/Zombie-Kaiser/RemoveWindowsAI/main/RemoveWindowsAi.ps1"))) -nonInteractive -revertMode -AllOptions
  ```
 
 ---
@@ -169,7 +197,7 @@ photoslegacy
 Given that Microsoft are continually updating and adding new AI features this script will attempt to stay updated for the newest stable build.
 
 You can view the newest updates to the script here:
-https://github.com/zoicware/RemoveWindowsAI/commits/main/
+https://github.com/Zombie-Kaiser/RemoveWindowsAI/commits/main/
 
  > [!NOTE]  
 > Any feature added to an Insider build will not be added to this script till it's added to the latest stable release
