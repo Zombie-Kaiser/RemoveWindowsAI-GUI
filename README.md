@@ -13,7 +13,7 @@
 ### Download the Standalone EXE
 
 > [!TIP]
-> The pre-built EXE and offline bundle are available on the **[Releases](https://github.com/Zombie-Kaiser/RemoveWindowsAI/releases)** page.
+> The pre-built EXE and offline bundle are available on the **[Releases](https://github.com/Zombie-Kaiser/RemoveWindowsAI-GUI/releases)** page.
 >
 > - **`RemoveWindowsAI-GUI.exe`** — single-file standalone GUI (no dependencies needed, runs from anywhere)
 > - **`RemoveWindowsAI-EXE-Bundle.zip`** — EXE + ClassicApps + CBS packages for full offline use
