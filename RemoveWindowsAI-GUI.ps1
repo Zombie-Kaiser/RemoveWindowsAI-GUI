@@ -311,7 +311,7 @@ function New-RoundButton {
     $btn.BorderThickness = 0
     $btn.Cursor = 'Hand'
     $btn.Background = New-Object System.Windows.Media.SolidColorBrush(([System.Windows.Media.ColorConverter]::ConvertFromString($BackgroundHex)))
-    $btn.Template = [System.Windows.Markup.XamlReader]::Parse($roundButtonTemplate -replace '__CORNER__', [string]$CornerRadius)
+    $btn.Template = [System.Windows.Markup.XamlReader]::Parse(($roundButtonTemplate -replace '__CORNER__', [string]$CornerRadius))
     if ($Content) { $btn.Content = $Content }
     return $btn
 }
@@ -557,7 +557,7 @@ function New-InfoButton {
     $infoButton.VerticalAlignment = 'Center'
     $infoButton.Cursor = 'Hand'
     $infoButton.Tag = $Func
-    $infoButton.Template = [System.Windows.Markup.XamlReader]::Parse($roundButtonTemplate -replace '__CORNER__', '12')
+    $infoButton.Template = [System.Windows.Markup.XamlReader]::Parse(($roundButtonTemplate -replace '__CORNER__', '12'))
     Register-UiText -Control $infoButton -Key 'InfoAria' -Property 'Aria' -Func $Func
     Register-UiText -Control $infoButton -Key 'InfoAriaHelp' -Property 'Help'
     $infoButton.Add_Click({
